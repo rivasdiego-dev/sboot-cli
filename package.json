@@ -1,0 +1,28 @@
+{
+    "name": "sboot-cli",
+    "version": "1.0.0",
+    "description": "A CLI tool for generating Spring Boot projects following Screaming Architecture patterns",
+    "main": "bin/global.js",
+    "type": "module",
+    "bin": {
+        "sboot": "bin/global.js"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "CLI",
+        "Spring Boot",
+        "Clean Architecture",
+        "Screaming Architecture"
+    ],
+    "author": "rivasdiego-dev",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^5.3.0",
+        "commander": "^12.0.0",
+        "fs-extra": "^11.2.0",
+        "inquirer": "^9.2.12",
+        "ora": "^8.0.1"
+    }
+}
