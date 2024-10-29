@@ -10,11 +10,11 @@ export function addScanCommand(program) {
         .option('-v, --verbose', 'Show detailed scanning information')
         .option('-o, --output <path>', 'Output the scan result to a file')
         .action(async (options) => {
-            const spinner = ora('Scanning project structure...').start();
+            const spinner = ora('Scanning project structure...\n').start();
             
             try {
                 const scanner = new ProjectScanner();
-                const structure = await scanner.scan();
+                const structure = await scanner.scan(options.verbose);
                 
                 spinner.succeed('Project structure scanned successfully!');
 

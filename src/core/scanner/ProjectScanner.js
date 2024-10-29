@@ -11,9 +11,11 @@ export class ProjectScanner {
         this.pathResolver = new PathResolver();
     }
 
-    async scan() {
+    async scan(verbose) {
         try {
-            this.logger.info('Starting project scan...');
+
+            if (verbose)
+                this.logger.info('Starting project scan...');
             
             const sourcePath = this.pathResolver.findJavaSourcePath();
             this.logger.debug('Found source path:', sourcePath);
