@@ -3,6 +3,8 @@
 import { Command } from 'commander';
 import { addScanCommand } from '../src/commands/scan.js';
 import { addConfigCommand } from '../src/commands/config.js';
+import { addCreateCommand } from '../src/commands/create.js';
+
 
 const program = new Command();
 
@@ -15,5 +17,7 @@ program
 addScanCommand(program);
 
 addConfigCommand(program);
+
+addCreateCommand(program);
 
 program.parse(process.argv);
