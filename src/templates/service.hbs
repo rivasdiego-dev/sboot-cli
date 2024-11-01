@@ -1,0 +1,16 @@
+package {{basePackage}}.{{module}}.application.services;
+
+import {{basePackage}}.{{module}}.domain.entities.{{entityName}};
+import java.util.List;
+import java.util.Optional;
+{{#if isUUID}}
+import java.util.UUID;
+{{/if}}
+
+public interface {{entityName}}Service {
+
+    List<{{entityName}}> getAll{{entityName}}s();
+
+    Optional<{{entityName}}> get{{entityName}}ById({{idType}} id);
+
+}

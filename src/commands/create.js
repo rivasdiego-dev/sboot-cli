@@ -42,19 +42,23 @@ async function handleResourceCreation(providedName, options) {
 
         // Get resource details
         const resourceDetails = await getResourceDetails(providedName, projectStructure, options);
-
+        
         // Generate resource
         spinner.start(`Creating ${resourceDetails.type} resource...`);
         const resourceGenerator = new ResourceGenerator(projectStructure, config, options.verbose);
         const result = await resourceGenerator.generate(resourceDetails);
-
-        // Custom success message for repositories
+        
+        // Custom success messages based on type
         if (resourceDetails.type === 'repository') {
             spinner.succeed(chalk.green(`${resourceDetails.name}Repository created successfully!`));
+        } else if (resourceDetails.type === 'service') {
+            const serviceName = resourceDetails.name.name || resourceDetails.name; // handle both object and string cases
+            const suffix = serviceName.endsWith('Service') ? '' : 'Service';
+            spinner.succeed(chalk.green(`${serviceName}${suffix} created successfully!`));
         } else {
             spinner.succeed(chalk.green(`Resource '${resourceDetails.name}' created successfully!`));
         }
-
+        
         if (options.verbose) {
             console.log('\nFiles created:');
             result.createdFiles.forEach(file => {
@@ -141,6 +145,10 @@ async function getResourceName(providedName, type, projectStructure, module) {
         return await selectEntityForRepository(providedName, projectStructure, module);
     }
 
+    if (type === 'service') {
+        return await getServiceName(providedName, projectStructure, module);
+    }
+
     // Original name logic for other types
     let name = providedName;
     if (!name) {
@@ -161,6 +169,67 @@ async function getResourceName(providedName, type, projectStructure, module) {
         name = inputName;
     }
     return name;
+}
+
+async function getServiceName(providedName, projectStructure, module) {
+    // If name provided via command line, just return it
+    if (providedName) {
+        return {
+            name: providedName,
+            isEntityBased: false
+        };
+    }
+
+    // Ask if service is entity-based
+    const { isEntityBased } = await inquirer.prompt({
+        type: 'confirm',
+        name: 'isEntityBased',
+        message: 'Is this service based on an entity?',
+        default: true
+    });
+
+    if (isEntityBased) {
+        const entities = await getAvailableEntities(projectStructure, module);
+
+        if (entities.length === 0) {
+            throw new Error(`No entities found in module '${module}'. Create an entity first or create a non-entity-based service.`);
+        }
+
+        const { selectedEntity } = await inquirer.prompt({
+            type: 'list',
+            name: 'selectedEntity',
+            message: 'Select the entity for the service:',
+            choices: entities
+        });
+
+        return {
+            name: selectedEntity,
+            isEntityBased: true
+        };
+    } else {
+        const { serviceName } = await inquirer.prompt({
+            type: 'input',
+            name: 'serviceName',
+            message: 'Enter the service name:',
+            validate: (input) => {
+                if (!input.trim()) {
+                    return 'Service name cannot be empty';
+                }
+                if (!/^[A-Z][a-zA-Z0-9 ]*$/.test(input)) {
+                    return 'Service name must start with uppercase letter and contain only letters, numbers and spaces';
+                }
+                if (!input.endsWith('Service')) {
+                    return 'Service name must end with "Service"';
+                }
+                return true;
+            }
+        });
+
+        return {
+            name: serviceName,
+            isEntityBased: false
+        };
+    }
 }
 
 async function selectEntityForRepository(providedName, projectStructure, moduleName) {

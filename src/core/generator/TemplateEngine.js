@@ -23,6 +23,9 @@ export class TemplateEngine {
                 .join('_')
                 .toLowerCase();
         });
+        Handlebars.registerHelper('lowerFirstLetter', (str) => {
+            return str.charAt(0).toLowerCase() + str.slice(1);
+        });
     }
 
     async generateFromTemplate(templateName, data) {

@@ -1,0 +1,15 @@
+package {{basePackage}}.{{module}}.application.services.implementations;
+
+import {{basePackage}}.{{module}}.application.services.{{serviceName}}Service;
+import org.springframework.stereotype.Service;
+{{#if useTransactional}}
+import org.springframework.transaction.annotation.Transactional;
+{{/if}}
+
+@Service
+{{#if useTransactional}}
+@Transactional
+{{/if}}
+public class {{serviceName}}ServiceImpl implements {{serviceName}}Service {
+    // TODO: Implement service methods
+}

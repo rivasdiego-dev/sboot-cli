@@ -1,0 +1,44 @@
+package {{basePackage}}.{{module}}.application.services.implementations;
+
+import {{basePackage}}.{{module}}.application.services.{{entityName}}Service;
+import {{basePackage}}.{{module}}.domain.entities.{{entityName}};
+import {{basePackage}}.{{module}}.infrastructure.repositories.{{entityName}}Repository;
+import org.springframework.stereotype.Service;
+{{#if useTransactional}}
+import org.springframework.transaction.annotation.Transactional;
+{{/if}}
+
+import java.util.List;
+import java.util.Optional;
+{{#if isUUID}}
+import java.util.UUID;
+{{/if}}
+
+@Service
+{{#if useTransactional}}
+@Transactional
+{{/if}}
+public class {{entityName}}ServiceImpl implements {{entityName}}Service {
+
+    private final {{entityName}}Repository {{lowerFirstLetter entityName}}Repository;
+
+    public {{entityName}}ServiceImpl({{entityName}}Repository {{lowerFirstLetter entityName}}Repository) {
+        this.{{lowerFirstLetter entityName}}Repository = {{lowerFirstLetter entityName}}Repository;
+    }
+
+    @Override
+    {{#if useTransactional}}
+    @Transactional(readOnly = true)
+    {{/if}}
+    public List<{{entityName}}> getAll{{entityName}}s() {
+        return {{lowerFirstLetter entityName}}Repository.findAll();
+    }
+
+    @Override
+    {{#if useTransactional}}
+    @Transactional(readOnly = true)
+    {{/if}}
+    public Optional<{{entityName}}> get{{entityName}}ById({{idType}} id) {
+        return {{lowerFirstLetter entityName}}Repository.findById(id);
+    }
+}
