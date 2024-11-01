@@ -42,14 +42,19 @@ async function handleResourceCreation(providedName, options) {
 
         // Get resource details
         const resourceDetails = await getResourceDetails(providedName, projectStructure, options);
-        
+
         // Generate resource
         spinner.start(`Creating ${resourceDetails.type} resource...`);
         const resourceGenerator = new ResourceGenerator(projectStructure, config, options.verbose);
         const result = await resourceGenerator.generate(resourceDetails);
-        
-        spinner.succeed(chalk.green(`Resource '${resourceDetails.name}' created successfully!`));
-        
+
+        // Custom success message for repositories
+        if (resourceDetails.type === 'repository') {
+            spinner.succeed(chalk.green(`${resourceDetails.name}Repository created successfully!`));
+        } else {
+            spinner.succeed(chalk.green(`Resource '${resourceDetails.name}' created successfully!`));
+        }
+
         if (options.verbose) {
             console.log('\nFiles created:');
             result.createdFiles.forEach(file => {
@@ -70,23 +75,20 @@ async function handleResourceCreation(providedName, options) {
 async function getResourceDetails(providedName, projectStructure, options) {
     // Get module
     const module = await getModule(options.module, projectStructure);
-    
+
     // Get resource type
     const type = await getResourceType(options.type);
-    
-    // Get resource name
-    const name = await getResourceName(providedName, type);
 
-    // Additional options
-    const resourceOptions = {
-        idType: options.idtype
-    };
+    // Get resource name
+    const name = await getResourceName(providedName, type, projectStructure, module);
 
     return {
         name,
         type,
         module,
-        options: resourceOptions
+        options: {
+            idType: options.idtype
+        }
     };
 }
 
@@ -116,7 +118,7 @@ async function getModule(providedModule, projectStructure) {
 
 async function getResourceType(providedType) {
     const types = ['entity', 'service', 'dto', 'repository', 'controller', 'mapper', 'enum'];
-    
+
     if (providedType) {
         if (!types.includes(providedType.toLowerCase())) {
             throw new Error(`Invalid resource type. Valid types are: ${types.join(', ')}`);
@@ -134,30 +136,76 @@ async function getResourceType(providedType) {
     return type;
 }
 
-async function getResourceName(providedName, type) {
+async function getResourceName(providedName, type, projectStructure, module) {
+    if (type === 'repository') {
+        return await selectEntityForRepository(providedName, projectStructure, module);
+    }
+
+    // Original name logic for other types
+    let name = providedName;
+    if (!name) {
+        const { inputName } = await inquirer.prompt({
+            type: 'input',
+            name: 'inputName',
+            message: `Enter the ${type} name:`,
+            validate: (input) => {
+                if (!input.trim()) {
+                    return 'Name cannot be empty';
+                }
+                if (!/^[A-Z][a-zA-Z0-9 ]*$/.test(input)) {
+                    return 'Name must start with uppercase letter and contain only letters, numbers and spaces';
+                }
+                return true;
+            }
+        });
+        name = inputName;
+    }
+    return name;
+}
+
+async function selectEntityForRepository(providedName, projectStructure, moduleName) {
+    // If name is provided via command line, validate it exists
     if (providedName) {
-        if (!/^[A-Z][a-zA-Z0-9 ]*$/.test(providedName)) {
-            throw new Error('Resource name must start with uppercase letter and contain only letters, numbers and spaces');
+        const entityExists = await validateEntityExists(providedName, projectStructure, moduleName);
+        if (!entityExists) {
+            throw new Error(`Entity '${providedName}' not found in module '${moduleName}'`);
         }
         return providedName;
     }
 
-    const { name } = await inquirer.prompt({
-        type: 'input',
-        name: 'name',
-        message: `Enter the ${type} name:`,
-        validate: (input) => {
-            if (!input.trim()) {
-                return 'Name cannot be empty';
-            }
-            if (!/^[A-Z][a-zA-Z0-9 ]*$/.test(input)) {
-                return 'Name must start with uppercase letter and contain only letters, numbers and spaces';
-            }
-            return true;
-        }
+    // Get available entities in the module
+    const entities = await getAvailableEntities(projectStructure, moduleName);
+
+    if (entities.length === 0) {
+        throw new Error(`No entities found in module '${moduleName}'. Create an entity first.`);
+    }
+
+    const { selectedEntity } = await inquirer.prompt({
+        type: 'list',
+        name: 'selectedEntity',
+        message: 'Select the entity for the repository:',
+        choices: entities
     });
 
-    return name;
+    return selectedEntity;
+}
+
+async function getAvailableEntities(projectStructure, moduleName) {
+    const selectedModule = projectStructure.modules.find(m => m.name === moduleName);
+    if (!selectedModule) return [];
+
+    // Filter for entities in the domain layer
+    const domainLayer = selectedModule.layers.domain;
+    if (!domainLayer || !domainLayer.resources) return [];
+
+    return domainLayer.resources
+        .filter(resource => resource.type === 'entity')
+        .map(entity => entity.name);
+}
+
+async function validateEntityExists(entityName, projectStructure, moduleName) {
+    const entities = await getAvailableEntities(projectStructure, moduleName);
+    return entities.includes(entityName);
 }
 
 async function handleModuleCreation(providedName, options) {

@@ -1,0 +1,10 @@
+package {{basePackage}}.{{module}}.infrastructure.repositories;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import {{basePackage}}.{{module}}.domain.entities.{{entityName}};
+{{#if isUUID}}
+import java.util.UUID;
+{{/if}}
+
+public interface {{entityName}}Repository extends JpaRepository<{{entityName}}, {{idType}}> {
+}
