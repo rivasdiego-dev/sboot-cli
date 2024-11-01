@@ -165,7 +165,7 @@ Options:
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check our [issues page](git@github.com:rivasdiego-dev/sboot-cli.git/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check our [issues page](https://github.com/rivasdiego-dev/sboot-cli/issues).
 
 ## 📝 License
 
