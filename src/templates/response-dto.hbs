@@ -1,0 +1,17 @@
+package {{basePackage}}.{{module}}.{{layer}}.dtos;
+
+import lombok.*;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class {{entityName}}ResponseDTO {
+    {{#if isUUID}}
+    private UUID id;
+    {{else}}
+    private Long id;
+    {{/if}}
+    // TODO: Add response fields
+}
+
+You are right!! I was thinking on not restricting the user on creating JUST the types of DTOs that we have now. We should be able to let the user decide a name for a DTO. So we will do 2 things. First ask the user if the DTO's he wants to create are defaults. if they are, User should SELECT the entity where to get the names and then create them. If they are not default, create the simplest strcutrure for a DTO (Would be non entity-based). let's just override the layer if he puts flags on them, otherwise use default. Also, user could put --defaults on the options of the command.

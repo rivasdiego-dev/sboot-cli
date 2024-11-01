@@ -26,9 +26,114 @@ export class ResourceGenerator {
                 return await this.generateRepository(name, module, options);
             case 'service':
                 return await this.generateService(name, module, options);
+            case 'controller':
+                return await this.generateController(name, module, options);
             default:
                 throw new Error(`Resource type '${type}' not implemented yet`);
         }
+    }
+
+    async generateController(resourceDetails, moduleName, options) {
+        const { name, isEntityBased } = resourceDetails;
+
+        if (isEntityBased) {
+            return await this.generateEntityBasedController(name, moduleName, options);
+        } else {
+            return await this.generateStandaloneController(name, moduleName, options);
+        }
+    }
+
+    async generateEntityBasedController(entityName, moduleName, options) {
+        // Verify entity and service exist
+        const servicePath = path.join(
+            this.projectStructure.sourcePath,
+            this.projectStructure.basePackage.split('.').join(path.sep),
+            moduleName,
+            'application',
+            'services',
+            `${entityName}Service.java`
+        );
+
+        if (!await fs.pathExists(servicePath)) {
+            throw new Error(`Service for ${entityName} not found in module ${moduleName}. Create the service first.`);
+        }
+
+        // Read entity file to determine ID type
+        const entityPath = path.join(
+            this.projectStructure.sourcePath,
+            this.projectStructure.basePackage.split('.').join(path.sep),
+            moduleName,
+            'domain',
+            'entities',
+            `${entityName}.java`
+        );
+
+        const entityContent = await fs.readFile(entityPath, 'utf-8');
+        const isUUID = entityContent.includes('UUID');
+        const idType = isUUID ? 'UUID' : 'Long';
+
+        const moduleBasePath = path.join(
+            this.projectStructure.sourcePath,
+            this.projectStructure.basePackage.split('.').join(path.sep),
+            moduleName
+        );
+
+        const controllerPath = path.join(
+            moduleBasePath,
+            'infrastructure',
+            'controllers',
+            `${entityName}Controller.java`
+        );
+
+        const templateData = {
+            basePackage: this.projectStructure.basePackage,
+            module: moduleName,
+            entityName,
+            idType,
+            isUUID
+        };
+
+        const content = await this.templateEngine.generateFromTemplate('controller', templateData);
+
+        await fs.ensureDir(path.dirname(controllerPath));
+        await fs.writeFile(controllerPath, content);
+
+        return {
+            createdFiles: [controllerPath]
+        };
+    }
+
+    async generateStandaloneController(controllerName, moduleName, options) {
+        // Remove 'Controller' suffix if present for consistency
+        const baseName = controllerName.replace('Controller', '');
+
+        const moduleBasePath = path.join(
+            this.projectStructure.sourcePath,
+            this.projectStructure.basePackage.split('.').join(path.sep),
+            moduleName
+        );
+
+        const controllerPath = path.join(
+            moduleBasePath,
+            'infrastructure',
+            'controllers',
+            `${baseName}Controller.java`
+        );
+
+        const templateData = {
+            basePackage: this.projectStructure.basePackage,
+            module: moduleName,
+            controllerName: baseName
+        };
+
+        const content = await this.templateEngine.generateFromTemplate('standalone-controller', templateData);
+
+        await fs.ensureDir(path.dirname(controllerPath));
+        await fs.writeFile(controllerPath, content);
+
+        return {
+            createdFiles: [controllerPath]
+        };
     }
 
     async generateService(resourceDetails, moduleName, options) {

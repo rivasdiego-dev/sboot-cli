@@ -1,0 +1,40 @@
+package {{basePackage}}.{{module}}.infrastructure.controllers;
+
+import {{basePackage}}.{{module}}.application.services.implementations.{{entityName}}ServiceImpl;
+import {{basePackage}}.{{module}}.domain.entities.{{entityName}};
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Optional;
+{{#if isUUID}}
+import java.util.UUID;
+{{/if}}
+
+@RestController
+@RequestMapping("/{{toLowerCase entityName}}s")
+public class {{entityName}}Controller {
+
+    private final {{entityName}}ServiceImpl {{lowerFirstLetter entityName}}Service;
+
+    public {{entityName}}Controller({{entityName}}ServiceImpl {{lowerFirstLetter entityName}}Service) {
+        this.{{lowerFirstLetter entityName}}Service = {{lowerFirstLetter entityName}}Service;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<{{entityName}}>> getAll{{entityName}}s() {
+        List<{{entityName}}> {{toLowerCase entityName}}s = {{lowerFirstLetter entityName}}Service.getAll{{entityName}}s();
+        return new ResponseEntity<>({{toLowerCase entityName}}s, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<{{entityName}}> get{{entityName}}ById(@PathVariable {{idType}} id) {
+        Optional<{{entityName}}> {{toLowerCase entityName}} = {{lowerFirstLetter entityName}}Service.get{{entityName}}ById(id);
+        return {{toLowerCase entityName}}.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+}

@@ -26,6 +26,13 @@ export class TemplateEngine {
         Handlebars.registerHelper('lowerFirstLetter', (str) => {
             return str.charAt(0).toLowerCase() + str.slice(1);
         });
+        Handlebars.registerHelper('toKebabCase', (str) => {
+            return str
+                .replace('Controller', '')
+                .split(/(?=[A-Z])/)
+                .join('-')
+                .toLowerCase();
+        });
     }
 
     async generateFromTemplate(templateName, data) {
