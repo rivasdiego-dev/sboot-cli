@@ -32,6 +32,9 @@ export class ConfigManager {
                     }
                 }
             },
+            entityPreferences: {
+                defaultIdType: 'SERIAL'
+            },
             mapperPreferences: {
                 type: 'mapstruct',
                 useSpringModel: true,
